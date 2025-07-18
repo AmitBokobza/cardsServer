@@ -1,3 +1,4 @@
+const { createError, handleError } = require("../utils/handleErrors");
 const { verifyToken } = require("./providers/jwt");
 
 const TOKEN_GENERATOR = "jwt";
@@ -7,23 +8,24 @@ const auth = (req, res, next) => {
         try {
             const tokenFromClient = req.header("x-auth-token");
             if (!tokenFromClient){
-                throw new Error("Authentication error: please login")
+                return createError("Authentication", "Please Login", 401)
             }
 
             const userInfo = verifyToken(tokenFromClient);
             if(!userInfo){
-                throw new Error("Authentication error: unauthorized user")
+                return createError("Authenticantion", "Unauthorized User", 403)
             }
 
             req.user = userInfo;
             return next();
  
         } catch (error) {
-            return res.status(401).send(error.message)
+            return handleError(res, error.status, error.message)
         }
     }
 
-    return res.status(500).send("Server authentication method not found");
+    
+    return handleError(res, 500, "Server authentication method not found");
 }
 
 module.exports = auth;

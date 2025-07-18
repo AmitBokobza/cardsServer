@@ -1,6 +1,7 @@
 const express = require("express");
 const { registerUser, getUser, getAllUsers, loginUser } = require("../models/userAccessDataService");
 const auth = require("../../auth/authService");
+const { handleError, createError } = require("../../utils/handleErrors");
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ router.post("/", async (req,res) => {
         let user = await registerUser(newUser);
         res.status(201).send(user);
     } catch (error) {
-        res.status(400).send(error.message)
+        return handleError(res, 400, error.message)
     }
 })
 
@@ -25,7 +26,7 @@ router.post("/login", async (req,res) => {
         const token = await loginUser(email,password);
         res.send(token);
     } catch (error) {
-        res.status(400).send(error.message);
+        return handleError(res, 400, error.message)
     }
 })
 
@@ -36,12 +37,12 @@ router.get("/:id",auth, async(req,res) => {
         const {id} = req.params;
         const user = await getUser(id);
         if(!userInfo.isAdmin && userInfo._id != user._id){
-            return res.status(403).send("Only the user or admin can show detailes")
+            return createError("Authorization", "Only the user or admin user can show detailes", 403)
         }
 
         res.status(200).send(user);
     } catch (error) {
-        res.status(400).send(error.message)
+        return handleError(res, error.status, error.message)
     }
 })
 
@@ -51,13 +52,13 @@ router.get("/",auth, async (req,res) => {
     try {
         const userInfo = req.user;  
         if(!userInfo.isAdmin){
-            return res.status(403).send("Only admin user can get all users list")
+            return createError("Authorization" , "Only admin user can get all users list", 403)
         }
 
         let users = await getAllUsers();
         res.status(200).send(users);
     } catch (error) {
-        res.status(400).send(error.message)
+        return handleError(res, error.status, error.message)
     }
 })
 module.exports = router;

@@ -1,5 +1,6 @@
 const { generateToken } = require("../../auth/providers/jwt");
 const User = require("./mongoDb/User");
+const { createError } = require("../../utils/handleErrors");
 
 //register new user
 const registerUser = async (newUser) => {
@@ -8,7 +9,7 @@ const registerUser = async (newUser) => {
     user = await user.save();
     return user;
   } catch (error) {
-    throw new Error("Mongoose " + error.message);
+    return createError("Mongoose", error.message)
   }
 };
 
@@ -18,7 +19,7 @@ const getUser = async (userId) => {
     const user = await User.findById(userId);
     return user;
   } catch (error) {
-    throw new Error("Mongoose " + error.message);
+    return createError("Mongoose", error.message)
   }
 };
 
@@ -28,7 +29,7 @@ const getAllUsers = async () => {
     const users = await User.find();
     return users;
   } catch (error) {
-    throw new Error("Mongoose " + error.message);
+    return createError("Mongoose", error.message)
   }
 };
 
@@ -37,18 +38,18 @@ const loginUser = async (email, password) => {
   try {
     const userFromDb = await User.findOne({email})
     if(!userFromDb){
-      throw new Error("Authentication error: User not found")
+      return createError("Authentication", "User not found")
     }
 
     if (userFromDb.password != password){
-      throw new Error("Authentication error: Invalid email or password")
+      return createError("Authentication", "Invalid email or password")
     }
 
     const token = generateToken(userFromDb);
     return token;
 
   } catch (error) {
-    throw new Error(error);
+    return createError("Authentication", error.message)
   }
 };
 
